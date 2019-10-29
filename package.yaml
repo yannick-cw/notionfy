@@ -1,0 +1,37 @@
+library:
+  source-dirs: src
+tests:
+  notionfy-test:
+    source-dirs: test
+    main: Spec.hs
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - notionfy
+copyright: 2019 Yannick 
+maintainer: https://www.dev-log.me
+dependencies:
+- mtl
+- hspec
+- base >= 4.7 && < 5
+name: notionfy
+version: 0.1.0.0
+extra-source-files:
+- README.md
+- ChangeLog.md
+author: Yannick
+github: yannick-cw/notionfy
+license: BSD3
+executables:
+  notionfy-exe:
+    source-dirs: app
+    main: Main.hs
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - notionfy
+description: Please see the README on GitHub at <https://github.com/githubuser/notionfy#readme>
