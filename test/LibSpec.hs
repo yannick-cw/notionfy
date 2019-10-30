@@ -45,13 +45,13 @@ instance Notion TestApp where
 instance Highlights TestApp where
   parseKindleHighlights fileContent =
     tell [ParseKindle fileContent]
-      $> [ Highlight { author = "au", title = "title", content = "content" }
-         , Highlight { author = "au2", title = "title2", content = "content2" }
-         , Highlight { author = "au3", title = "title3", content = "content3" }
+      $> [ Highlight { title = "title", content = "content" }
+         , Highlight { title = "title2", content = "content2" }
+         , Highlight { title = "title3", content = "content3" }
          ]
   parseNotionHighlight pageContent =
     tell [ParseNotion pageContent]
-      $> Highlight { author = "au2", title = "title2", content = "content2" }
+      $> Highlight { title = "title2", content = "content2" }
 
 
 runTest :: TestApp ()

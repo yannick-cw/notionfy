@@ -28,6 +28,7 @@ import           CliParser                      ( Args(..)
                                                 , parseArgs
                                                 )
 import           Options.Applicative
+import           HighlightParser
 import           System.Exit                    ( exitFailure )
 
 
@@ -52,17 +53,12 @@ instance Notion AppM where
 instance Highlights AppM where
   parseKindleHighlights =
     liftIO
-      . ($> [ Highlight { author  = "au2"
-                        , title   = "title2"
-                        , content = "content2"
-                        }
-            ]
-        )
+      . ($> [Highlight { title = "title2", content = "content2" }])
       . putStr
       . show
   parseNotionHighlight =
     liftIO
-      . ($> Highlight { author = "au", title = "title", content = "content" })
+      . ($> Highlight { title = "title", content = "content" })
       . putStr
       . show
 
@@ -82,7 +78,6 @@ data BlowUp = ParsErr String | FsErr String |  NotionErr String  deriving (Show)
 class (MonadError BlowUp m) => FS m where
   readF:: String -> m String
 
-data Highlight = Highlight { author :: String, title :: String, content :: String} deriving (Show)
 class (MonadError BlowUp m) => Highlights m where
   parseKindleHighlights :: String -> m [Highlight]
   parseNotionHighlight :: String -> m Highlight

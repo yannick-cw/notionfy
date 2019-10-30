@@ -10,9 +10,11 @@ tests:
     - -with-rtsopts=-N
     dependencies:
     - notionfy
-copyright: 2019 Yannick 
+copyright: 2019 Yannick
 maintainer: https://www.dev-log.me
 dependencies:
+- extra
+- split
 - mtl
 - optparse-applicative
 - hspec
