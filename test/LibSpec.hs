@@ -1,19 +1,26 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE DeriveFunctor #-}
+
 module LibSpec where
 
 import           Test.Hspec
 import           Lib
 import           Control.Monad.Except
 import           Control.Monad.Writer
+import           Control.Monad.Reader           ( MonadReader
+                                                , Reader
+                                                , runReader
+                                                , ask
+                                                )
 import           Data.Functor
+import           CliParser                      ( Args(..) )
 
-newtype TestApp a = TestApp { unpack :: ExceptT BlowUp (Writer [TestCommand] ) a }
+newtype TestApp a = TestApp { unpack :: ExceptT BlowUp (WriterT [TestCommand] (Reader Args) ) a }
   deriving (
       Functor
     , Applicative
     , Monad
     , MonadWriter [TestCommand]
+    , MonadReader Args
     , MonadError BlowUp
   )
 
@@ -24,19 +31,16 @@ data TestCommand = CliArg String
                  | ParseKindle String
                  | ParseNotion String deriving (Show, Eq)
 
-instance Cli TestApp where
-  getArg argName = tell [CliArg argName] $> case argName of
-    "notionId"      -> "theNotionId"
-    "pageId"        -> "parentPageId"
-    "highlightFile" -> "pathToHighlightFile"
-
 instance FS TestApp where
   readF path = tell [FSPath path] $> "kindle_file_content"
 
 instance Notion TestApp where
-  addSubPage (NotionId id) highlight = tell [AddPage id (title highlight)]
-  getSubPages (NotionId id) (PageId title) =
-    tell [GetPage id title] $> ["subP1_content"]
+  addSubPage highlight = do
+    args <- ask
+    tell [AddPage (notionId args) (title highlight)]
+  getSubPages (PageId title) = do
+    args <- ask
+    tell [GetPage (notionId args) title] $> ["subP1_content"]
 
 instance Highlights TestApp where
   parseKindleHighlights fileContent =
@@ -57,10 +61,7 @@ spec :: Spec
 spec = describe "updateNotion" $ do
   it "executes the expected commands in order"
     $          writtenCommands
-    `shouldBe` [ CliArg "notionId"
-               , CliArg "pageId"
-               , CliArg "highlightFile"
-               , FSPath "pathToHighlightFile"
+    `shouldBe` [ FSPath "pathToHighlightFile"
                , ParseKindle "kindle_file_content"
                , GetPage "theNotionId" "parentPageId"
                , ParseNotion "subP1_content"
@@ -71,5 +72,12 @@ spec = describe "updateNotion" $ do
     $          any (\command -> command == AddPage "theNotionId" "title2")
                    writtenCommands
     `shouldBe` False
-  where writtenCommands = execWriter $ runExceptT $ unpack runTest
+ where
+  args :: Args
+  args = Args { notionId       = "theNotionId"
+              , parentPageId   = "parentPageId"
+              , highlightsPath = "pathToHighlightFile"
+              }
+  writtenCommands :: [TestCommand]
+  writtenCommands = runReader (execWriterT $ runExceptT $ unpack runTest) args
 
