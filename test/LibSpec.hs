@@ -26,7 +26,7 @@ newtype TestApp a = TestApp { unpack :: ExceptT BlowUp (WriterT [TestCommand] (R
 
 data TestCommand = CliArg String
                  | FSPath String
-                 | AddPage String String
+                 | AddPage String String String
                  | GetPage String String
                  | ParseKindle String
                  | ParseNotion String deriving (Show, Eq)
@@ -37,7 +37,7 @@ instance FS TestApp where
 instance Notion TestApp where
   addSubPage highlight = do
     args <- ask
-    tell [AddPage (notionId args) (title highlight)]
+    tell [AddPage (notionId args) (title highlight) (content highlight)]
   getSubPages (PageId title) = do
     args <- ask
     tell [GetPage (notionId args) title] $> ["subP1_content"]
@@ -47,6 +47,7 @@ instance Highlights TestApp where
     tell [ParseKindle fileContent]
       $> [ Highlight { title = "title", content = "content" }
          , Highlight { title = "title2", content = "content2" }
+         , Highlight { title = "title2", content = "content2_diff" }
          , Highlight { title = "title3", content = "content3" }
          ]
   parseNotionHighlight pageContent =
@@ -65,13 +66,19 @@ spec = describe "updateNotion" $ do
                , ParseKindle "kindle_file_content"
                , GetPage "theNotionId" "parentPageId"
                , ParseNotion "subP1_content"
-               , AddPage "theNotionId" "title"
-               , AddPage "theNotionId" "title3"
+               , AddPage "theNotionId" "title"  "content"
+               , AddPage "theNotionId" "title2" "content2_diff"
+               , AddPage "theNotionId" "title3" "content3"
                ]
   it "does not add the in notion existing page"
-    $          any (\command -> command == AddPage "theNotionId" "title2")
-                   writtenCommands
+    $ any (\command -> command == AddPage "theNotionId" "title2" "content2")
+          writtenCommands
     `shouldBe` False
+  it "does add a page for different content but existing title"
+    $          any
+                 (\command -> command == AddPage "theNotionId" "title2" "content2_diff")
+                 writtenCommands
+    `shouldBe` True
  where
   args :: Args
   args = Args { notionId       = "theNotionId"

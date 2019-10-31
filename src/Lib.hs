@@ -58,7 +58,7 @@ instance FS AppM where
     Left  err  -> throwError $ FsErr $ show err
    where
     tryReading :: IO (Either IOError String)
-    tryReading = try $ withFile path ReadMode hGetContents
+    tryReading = try $ readFile path
 
 instance Notion AppM where
   addSubPage  = liftIO . putStr . show
@@ -106,7 +106,10 @@ updateNotion = do
   subPages                             <- getSubPages (PageId parentPageId)
   currentHighlights                    <- traverse parseNotionHighlight subPages
   let newHighlighs = filter
-        (\h -> not $ any (\cH -> title cH == title h) currentHighlights)
+        (\h -> not $ any
+          (\cH -> title cH == title h && content cH == content h)
+          currentHighlights
+        )
         kindleHighlights
   traverse_ addSubPage newHighlighs
 
