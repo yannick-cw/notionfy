@@ -13,7 +13,7 @@ parseArgs = execParser opts
  where
   opts = info
     (argsParser <**> helper)
-    (fullDesc <> progDesc "Upload highlights to notion" <> header
+    (fullDesc <> progDesc "Upload your highlights to notion" <> header
       "notionfy - sync all your kindle highlights to notion"
     )
 
@@ -22,12 +22,19 @@ argsParser :: Parser Args
 argsParser =
   Args
     <$> strOption
-          (long "notionId" <> short 'n' <> help
-            "Your notion id, found in the token_v2 cookie"
+          (  long "token"
+          <> short 'n'
+          <> help
+               "Your notion token, found in the token_v2 cookie when you open notion in the browser"
           )
     <*> strOption
-          (long "parentPageId" <> short 'p' <> help
-            "Id of the page to which the highlights should be added"
+          (  long "parent"
+          <> short 'p'
+          <> help
+               "Id of the page to which the highlights should be added, you find it in the url if you open the page in the browser"
           )
-    <*> strOption (long "kindlePath" <> short 'h' <> help "Path to your kindle")
+    <*> strOption
+          (long "kindle" <> short 'k' <> help
+            "Path to your kindle, e.g. on Mac /Volumes/Kindle"
+          )
 

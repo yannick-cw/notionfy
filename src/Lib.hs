@@ -44,18 +44,14 @@ newtype AppM a = AppM { unWrapAppM :: ExceptT BlowUp (ReaderT Args IO) a }
 
 -- dummy instances for now
 instance FS AppM where
-  readF = liftIO . ($> "File") . putStr
+  readF = liftIO . ($> "Title\nInfo\n\nHighlight Text") . putStr
 
 instance Notion AppM where
   addSubPage  = liftIO . putStr . show
   getSubPages = liftIO . ($> ["SubPage"]) . putStr . show
 
 instance Highlights AppM where
-  parseKindleHighlights =
-    liftIO
-      . ($> [Highlight { title = "title2", content = "content2" }])
-      . putStr
-      . show
+  parseKindleHighlights = pure . parseHighlights
   parseNotionHighlight =
     liftIO
       . ($> Highlight { title = "title", content = "content" })
