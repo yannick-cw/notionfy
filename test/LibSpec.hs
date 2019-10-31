@@ -62,7 +62,7 @@ spec :: Spec
 spec = describe "updateNotion" $ do
   it "executes the expected commands in order"
     $          writtenCommands
-    `shouldBe` [ FSPath "pathToHighlightFile"
+    `shouldBe` [ FSPath "pathToKindle/documents/My Clippings.txt"
                , ParseKindle "kindle_file_content"
                , GetPage "theNotionId" "parentPageId"
                , ParseNotion "subP1_content"
@@ -83,7 +83,7 @@ spec = describe "updateNotion" $ do
   args :: Args
   args = Args { notionId       = "theNotionId"
               , parentPageId   = "parentPageId"
-              , highlightsPath = "pathToHighlightFile"
+              , highlightsPath = "pathToKindle"
               }
   writtenCommands :: [TestCommand]
   writtenCommands = runReader (execWriterT $ runExceptT $ unpack runTest) args

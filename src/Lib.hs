@@ -40,6 +40,7 @@ import           Options.Applicative
 import           HighlightParser
 import           System.Exit                    ( exitFailure )
 import           Debug.Trace                    ( trace )
+import           System.FilePath                ( (</>) )
 
 
 newtype AppM a = AppM { unWrapAppM :: ExceptT BlowUp (ReaderT Args IO) a }
@@ -100,11 +101,11 @@ class (MonadError BlowUp m, MonadReader Args m) => Notion m where
 
 updateNotion :: (FS m, Notion m, Highlights m, MonadReader Args m) => m ()
 updateNotion = do
-  (Args _ parentPageId highlightsPath) <- ask
-  kindleFile                           <- readF highlightsPath
-  kindleHighlights                     <- parseKindleHighlights kindleFile
-  subPages                             <- getSubPages (PageId parentPageId)
-  currentHighlights                    <- traverse parseNotionHighlight subPages
+  (Args _ parentPageId kindlePath) <- ask
+  kindleFile                       <- readF $ kindlePath </> "documents/My Clippings.txt"
+  kindleHighlights                 <- parseKindleHighlights kindleFile
+  subPages                         <- getSubPages (PageId parentPageId)
+  currentHighlights                <- traverse parseNotionHighlight subPages
   let newHighlighs = filter
         (\h -> not $ any
           (\cH -> title cH == title h && content cH == content h)
