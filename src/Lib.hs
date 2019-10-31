@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 module Lib
@@ -15,7 +16,15 @@ module Lib
   )
 where
 
-import           Control.Monad.Except
+import           Control.Monad.Except           ( throwError
+                                                , MonadIO
+                                                , ExceptT
+                                                , MonadError
+                                                , liftIO
+                                                , runExceptT
+                                                )
+import           Control.Exception
+import           System.IO
 import           Control.Applicative            ( liftA3 )
 import           Control.Monad.Reader           ( MonadReader
                                                 , ReaderT
@@ -30,6 +39,7 @@ import           CliParser                      ( Args(..)
 import           Options.Applicative
 import           HighlightParser
 import           System.Exit                    ( exitFailure )
+import           Debug.Trace                    ( trace )
 
 
 newtype AppM a = AppM { unWrapAppM :: ExceptT BlowUp (ReaderT Args IO) a }
@@ -42,9 +52,13 @@ newtype AppM a = AppM { unWrapAppM :: ExceptT BlowUp (ReaderT Args IO) a }
     , MonadError BlowUp
   )
 
--- dummy instances for now
 instance FS AppM where
-  readF = liftIO . ($> "Title\nInfo\n\nHighlight Text") . putStr
+  readF path = liftIO tryReading >>= \case
+    Right text -> pure text
+    Left  err  -> throwError $ FsErr $ show err
+   where
+    tryReading :: IO (Either IOError String)
+    tryReading = try $ withFile path ReadMode hGetContents
 
 instance Notion AppM where
   addSubPage  = liftIO . putStr . show
