@@ -13,10 +13,19 @@ tests:
 copyright: 2019 Yannick
 maintainer: https://www.dev-log.me
 dependencies:
+- text
+- unordered-containers
+- bytestring
+- http-client
+- time
+- lens
+- lens-aeson
+- aeson
 - filepath
 - extra
 - split
 - mtl
+- wreq
 - optparse-applicative
 - hspec
 - base >= 4.7 && < 5
