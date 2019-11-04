@@ -79,11 +79,12 @@ instance ToJSON Operation
 newtype Transaction = Transaction { operations :: [ Operation ] } deriving (Generic)
 instance ToJSON Transaction
 
-writeHighlight :: Highlight -> String -> String -> ReaderT String IO ()
-writeHighlight highlight userId parentPageId = do
+writeHighlight
+  :: Highlight -> String -> String -> ExceptT String (ReaderT String IO) ()
+writeHighlight highlight parentPageId userId = do
   (headerId, contentId, seperatorId) <- liftIO
     $ liftA3 (,,) randomIO randomIO randomIO
-  opts <- cookieOpts
+  opts <- lift cookieOpts
   now  <- liftIO getCurrentTime
   let transaction =
         Transaction { operations = header ++ contentPart ++ seperator }
