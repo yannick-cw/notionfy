@@ -13,7 +13,10 @@ tests:
 copyright: 2019 Yannick
 maintainer: https://www.dev-log.me
 dependencies:
+- random
+- containers
 - text
+- uuid
 - unordered-containers
 - bytestring
 - http-client
