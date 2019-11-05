@@ -1,12 +1,19 @@
 module CliParser
   ( Args(..)
   , parseArgs
+  , HasNotion(..)
   )
 where
 
 import           Options.Applicative
 
 data Args = Args { notionId :: String, parentPageId :: String, highlightsPath :: String }
+
+class HasNotion r where
+  notionConf :: r -> (String, String)
+
+instance HasNotion Args where
+  notionConf r = (notionId r, parentPageId r)
 
 parseArgs :: IO Args
 parseArgs = execParser opts

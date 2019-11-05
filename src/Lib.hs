@@ -16,6 +16,7 @@ module Lib
   )
 where
 
+import           AppErrors
 import           Control.Monad.Except           ( throwError
                                                 , MonadIO
                                                 , ExceptT
@@ -69,11 +70,8 @@ instance FS AppM where
 
 instance Notion AppM where
   addSubPage highlight = do
-    parentId <- asks parentPageId
-    AppM $ ExceptT $ withReaderT
-      notionId
-      (runExceptT $ withExceptT NotionErr (write parentId))
-    where write parentId = loadUserId >>= writeHighlight highlight parentId
+    userId <- AppM loadUserId
+    AppM $ writeHighlight highlight userId
   getSubPages = liftIO . ($> ["SubPage"]) . putStr . show
 
 instance Highlights AppM where
@@ -94,8 +92,6 @@ runUpdate = do
  where
   runApp :: Args -> IO (Either BlowUp ())
   runApp = runReaderT (runExceptT $ unWrapAppM (updateNotion :: AppM ()))
-
-data BlowUp = ParsErr String | FsErr String |  NotionErr String  deriving (Show)
 
 class (MonadError BlowUp m) => FS m where
   readF:: String -> m String

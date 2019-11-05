@@ -7,6 +7,7 @@ module NotionClient
   )
 where
 
+import           AppErrors
 import           Network.Wreq
 import           Network.HTTP.Client            ( createCookieJar
                                                 , Cookie(Cookie)
@@ -42,12 +43,13 @@ import           Control.Applicative            ( liftA3 )
 import           HighlightParser                ( Highlight(..) )
 import           GHC.Generics
 import           System.Random                  ( randomIO )
+import           CliParser                      ( HasNotion(..) )
 
 
 notionUrl :: String
 notionUrl = "https://www.notion.so/api/v3/"
 
-loadUserId :: ExceptT String (ReaderT String IO) String
+loadUserId :: HasNotion r => ExceptT BlowUp (ReaderT r IO) String
 loadUserId = do
   opts   <- lift cookieOpts
   r      <- liftIO $ postWith opts (notionUrl ++ "loadUserContent") emptyObject
@@ -57,7 +59,7 @@ loadUserId = do
         >>= (listToMaybe . keys)
     of
       Just j  -> return j
-      Nothing -> throwError
+      Nothing -> throwError $ NotionErr
         "Notion responded not with expected Json, .recordMap.notion_user.{id}"
   return $ unpack userId
 
@@ -80,31 +82,35 @@ newtype Transaction = Transaction { operations :: [ Operation ] } deriving (Gene
 instance ToJSON Transaction
 
 writeHighlight
-  :: Highlight -> String -> String -> ExceptT String (ReaderT String IO) ()
-writeHighlight highlight parentPageId userId = do
+  :: HasNotion r => Highlight -> String -> ExceptT BlowUp (ReaderT r IO) ()
+writeHighlight highlight userId = do
   (headerId, contentId, seperatorId) <- liftIO
     $ liftA3 (,,) randomIO randomIO randomIO
-  opts <- lift cookieOpts
-  now  <- liftIO getCurrentTime
+  (_, parentPageId) <- asks notionConf
+  opts              <- lift cookieOpts
+  now               <- liftIO getCurrentTime
   let transaction =
         Transaction { operations = header ++ contentPart ++ seperator }
       header =
-        [ addSegment headerId "sub_header"
-        , addAfter headerId
+        [ addSegment headerId "sub_header" parentPageId
+        , addAfter headerId parentPageId
         , addContent headerId (title highlight)
         ]
       contentPart =
-        [ addSegment contentId "text"
-        , addAfter contentId
+        [ addSegment contentId "text" parentPageId
+        , addAfter contentId parentPageId
         , addContent contentId (content highlight)
         ]
-      seperator = [addSegment seperatorId "divider", addAfter seperatorId]
+      seperator =
+        [ addSegment seperatorId "divider" parentPageId
+        , addAfter seperatorId parentPageId
+        ]
   void $ liftIO $ postWith opts
                            (notionUrl ++ "submitTransaction")
                            (toJSON transaction)
  where
-  addAfter opId = Operation
-    { NotionClient.id = parentPageId
+  addAfter opId parentId = Operation
+    { NotionClient.id = parentId
     , path            = ["content"]
     , command         = "listAfter"
     , table           = "block"
@@ -116,7 +122,7 @@ writeHighlight highlight parentPageId userId = do
                                       , table           = "block"
                                       , args            = Args [[content]]
                                       }
-  addSegment opId _type = Operation
+  addSegment opId _type parentId = Operation
     { NotionClient.id = toString opId
     , path            = []
     , command         = "set"
@@ -127,17 +133,17 @@ writeHighlight highlight parentPageId userId = do
                             , ("version"     , N 1)
                             , ("alive"       , S "True")
                             , ("created_by"  , S userId)
-                            , ("parent_id"   , S parentPageId)
+                            , ("parent_id"   , S parentId)
                             , ("parent_table", S "block")
                             , ("type"        , S _type)
                             ]
                           )
     }
 
-cookieOpts :: ReaderT String IO Options
+cookieOpts :: HasNotion r => ReaderT r IO Options
 cookieOpts = do
-  token <- ask
-  now   <- liftIO getCurrentTime
+  (token, _) <- asks notionConf
+  now        <- liftIO getCurrentTime
   let expires = addUTCTime (1440 * 3000) now
       cookie  = Cookie "token_v2"
                        (pack token)
