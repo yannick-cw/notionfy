@@ -7,7 +7,6 @@ where
 import           Data.List.Split
 import           Data.List.Extra                ( notNull )
 import           Data.Maybe                     ( maybeToList )
-import           Debug.Trace                    ( trace )
 
 data Highlight = Highlight { title :: String, content :: String} deriving (Show, Eq)
 
