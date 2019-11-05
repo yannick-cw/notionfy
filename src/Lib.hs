@@ -23,29 +23,21 @@ import           Control.Monad.Except           ( throwError
                                                 , MonadError
                                                 , liftIO
                                                 , runExceptT
-                                                , withExceptT
                                                 , ExceptT(..)
                                                 )
 import           Control.Exception
-import           System.IO
-import           Control.Applicative            ( liftA3 )
 import           Control.Monad.Reader           ( MonadReader
                                                 , ReaderT
                                                 , ask
                                                 , runReaderT
-                                                , withReaderT
-                                                , asks
                                                 )
-import           Control.Monad.Trans.Class      ( lift )
 import           Data.Foldable                  ( traverse_ )
 import           Data.Functor
 import           CliParser                      ( Args(..)
                                                 , parseArgs
                                                 )
-import           Options.Applicative
 import           HighlightParser
 import           System.Exit                    ( exitFailure )
-import           Debug.Trace                    ( trace )
 import           System.FilePath                ( (</>) )
 import           NotionClient
 

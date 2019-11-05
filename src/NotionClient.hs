@@ -25,14 +25,11 @@ import           Data.Aeson.Types               ( emptyObject
 import           Data.Aeson.Lens                ( _Object
                                                 , key
                                                 )
-import           Data.Aeson                     ( toJSON
-                                                , encode
-                                                )
+import           Data.Aeson                     ( toJSON )
 import           Data.Time.Clock
 import           Data.ByteString.Char8          ( pack )
 import           Data.Text                      ( unpack )
 import           Data.Maybe                     ( listToMaybe )
-import           Data.Foldable                  ( toList )
 import           Data.HashMap.Strict            ( keys
                                                 , HashMap
                                                 , fromList
