@@ -32,7 +32,6 @@ import           Control.Monad.Reader           ( MonadReader
                                                 , runReaderT
                                                 )
 import           Data.Foldable                  ( traverse_ )
-import           Data.Functor
 import           CliParser                      ( Args(..)
                                                 , parseArgs
                                                 )
@@ -64,15 +63,10 @@ instance Notion AppM where
   addSubPage highlight = do
     userId <- AppM loadUserId
     AppM $ writeHighlight highlight userId
-  getSubPages = liftIO . ($> ["SubPage"]) . putStr . show
+  getSubPages pageId = AppM getHighlights
 
 instance Highlights AppM where
   parseKindleHighlights = pure . parseHighlights
-  parseNotionHighlight =
-    liftIO
-      . ($> Highlight { title = "title", content = "content" })
-      . putStr
-      . show
 
 runUpdate :: IO ()
 runUpdate = do
@@ -90,21 +84,19 @@ class (MonadError BlowUp m) => FS m where
 
 class (MonadError BlowUp m) => Highlights m where
   parseKindleHighlights :: String -> m [Highlight]
-  parseNotionHighlight :: String -> m Highlight
 
 newtype PageId = PageId String deriving (Show)
 newtype Content = Content String
 class (MonadError BlowUp m, MonadReader Args m) => Notion m where
   addSubPage :: Highlight -> m ()
-  getSubPages :: PageId -> m [String]
+  getSubPages :: PageId -> m [Highlight]
 
 updateNotion :: (FS m, Notion m, Highlights m, MonadReader Args m) => m ()
 updateNotion = do
   (Args _ parentPageId kindlePath) <- ask
   kindleFile <- readF $ kindlePath </> "documents/My Clippings.txt"
   kindleHighlights                 <- parseKindleHighlights kindleFile
-  subPages                         <- getSubPages (PageId parentPageId)
-  currentHighlights                <- traverse parseNotionHighlight subPages
+  currentHighlights                <- getSubPages (PageId parentPageId)
   let newHighlighs = filter
         (\h -> not $ any
           (\cH -> title cH == title h && content cH == content h)

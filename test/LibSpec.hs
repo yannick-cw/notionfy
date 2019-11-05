@@ -40,7 +40,8 @@ instance Notion TestApp where
     tell [AddPage (notionId args) (title highlight) (content highlight)]
   getSubPages (PageId title) = do
     args <- ask
-    tell [GetPage (notionId args) title] $> ["subP1_content"]
+    tell [GetPage (notionId args) title]
+      $> [Highlight { title = "title2", content = "content2" }]
 
 instance Highlights TestApp where
   parseKindleHighlights fileContent =
@@ -50,9 +51,6 @@ instance Highlights TestApp where
          , Highlight { title = "title2", content = "content2_diff" }
          , Highlight { title = "title3", content = "content3" }
          ]
-  parseNotionHighlight pageContent =
-    tell [ParseNotion pageContent]
-      $> Highlight { title = "title2", content = "content2" }
 
 
 runTest :: TestApp ()
@@ -65,7 +63,6 @@ spec = describe "updateNotion" $ do
     `shouldBe` [ FSPath "pathToKindle/documents/My Clippings.txt"
                , ParseKindle "kindle_file_content"
                , GetPage "theNotionId" "parentPageId"
-               , ParseNotion "subP1_content"
                , AddPage "theNotionId" "title"  "content"
                , AddPage "theNotionId" "title2" "content2_diff"
                , AddPage "theNotionId" "title3" "content3"

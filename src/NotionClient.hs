@@ -1,9 +1,12 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE LambdaCase #-}
 
 module NotionClient
   ( loadUserId
   , writeHighlight
+  , getHighlights
   )
 where
 
@@ -16,25 +19,33 @@ import           Control.Monad.Reader
 import           Control.Monad.Except
 import           Data.Aeson.Types               ( emptyObject
                                                 , ToJSON
+                                                , FromJSON(..)
                                                 , sumEncoding
                                                 , unwrapUnaryRecords
                                                 , genericToJSON
+                                                , fieldLabelModifier
                                                 , defaultOptions
                                                 , SumEncoding(..)
                                                 )
 import           Data.Aeson.Lens                ( _Object
                                                 , key
                                                 )
-import           Data.Aeson                     ( toJSON )
+import           Data.Aeson                     ( toJSON
+                                                , genericParseJSON
+                                                )
 import           Data.Time.Clock
 import           Data.ByteString.Char8          ( pack )
 import           Data.Text                      ( unpack )
-import           Data.Maybe                     ( listToMaybe )
+import           Data.Maybe                     ( listToMaybe
+                                                , catMaybes
+                                                , maybeToList
+                                                )
 import           Data.HashMap.Strict            ( keys
                                                 , HashMap
                                                 , fromList
                                                 )
 import           Data.UUID
+import           Data.List.Split                ( splitWhen )
 import           Control.Lens
 import           Control.Applicative            ( liftA3 )
 import           HighlightParser                ( Highlight(..) )
@@ -66,7 +77,7 @@ instance ToJSON StringOrNum where
   toJSON = genericToJSON
     (defaultOptions { sumEncoding = UntaggedValue, unwrapUnaryRecords = True })
 
-data Arg =  Args [[String]]  | ObjArgs ( HashMap String StringOrNum ) deriving (Generic)
+data Arg =  ArrayArgs [[String]]  | ObjArgs ( HashMap String StringOrNum ) deriving (Generic)
 instance ToJSON Arg where
   toJSON = genericToJSON
     (defaultOptions { sumEncoding = UntaggedValue, unwrapUnaryRecords = True })
@@ -91,12 +102,12 @@ writeHighlight highlight userId = do
       header =
         [ addSegment headerId "sub_header" parentPageId
         , addAfter headerId parentPageId
-        , addContent headerId (title highlight)
+        , addContent headerId ((title :: Highlight -> String) highlight)
         ]
       contentPart =
         [ addSegment contentId "text" parentPageId
         , addAfter contentId parentPageId
-        , addContent contentId (content highlight)
+        , addContent contentId ((content :: Highlight -> String) highlight)
         ]
       seperator =
         [ addSegment seperatorId "divider" parentPageId
@@ -117,7 +128,7 @@ writeHighlight highlight userId = do
                                       , path = ["properties", "title"]
                                       , command         = "set"
                                       , table           = "block"
-                                      , args            = Args [[content]]
+                                      , args            = ArrayArgs [[content]]
                                       }
   addSegment opId _type parentId = Operation
     { NotionClient.id = toString opId
@@ -136,6 +147,65 @@ writeHighlight highlight userId = do
                             ]
                           )
     }
+
+newtype Props = Props { title :: [[String]]} deriving (Generic)
+instance FromJSON Props where
+
+data Value = Value { content :: Maybe [String], _type :: String, properties :: Maybe Props } deriving (Generic)
+instance FromJSON Value where
+  parseJSON = genericParseJSON
+    (defaultOptions { fieldLabelModifier = adjustTypeName })
+   where
+    adjustTypeName "_type" = "type"
+    adjustTypeName n       = n
+
+newtype Results = Results { value :: Value } deriving (Generic)
+instance FromJSON Results
+
+newtype PageRes = PageRes { results :: [ Results ] } deriving (Generic)
+instance FromJSON PageRes
+
+data Request = Request { table :: String, id :: String} deriving (Generic)
+instance ToJSON Request
+newtype HighlightReq = HighlightReq { requests :: [ Request ]} deriving (Generic)
+instance ToJSON HighlightReq
+
+getHighlights :: HasNotion r => ExceptT BlowUp (ReaderT r IO) [Highlight]
+getHighlights = do
+  opts           <- lift cookieOpts
+  (_, parentId)  <- asks notionConf
+  parentValueObj <- liftIO $ getRecords opts parentId
+  let contentIds =
+        maybe [] (concat . (content :: Value -> Maybe [String])) parentValueObj
+  subResults <- liftIO $ catMaybes <$> traverse (getRecords opts) contentIds
+  let highlightGroups = splitWhen ((==) "divider" . _type) subResults
+      withProperties  = (>>= (maybeToList . properties)) <$> highlightGroups
+      titles          = ((title :: Props -> [[String]]) <$>) <$> withProperties
+      highlights =
+        titles
+          >>= ( maybeToList
+              . (\case
+                  [[[title]], [[content]]] ->
+                    Just $ Highlight { title = title, content = content }
+                  _ -> Nothing
+                )
+              )
+  return highlights
+ where
+  getRecords opts parentId = do
+    response <- postWith opts
+                         (notionUrl ++ "getRecordValues")
+                         (toJSON $ requestBody parentId)
+    response' <- asJSON response
+    let pageRes  = response' ^. responseBody
+        firstRes = listToMaybe $ results pageRes
+        valueObj = value <$> firstRes
+    return valueObj
+  requestBody parentId =
+    HighlightReq { requests = [Request { table = "block", id = parentId }] }
+
+
+
 
 cookieOpts :: HasNotion r => ReaderT r IO Options
 cookieOpts = do
