@@ -28,7 +28,7 @@ import           Control.Monad.Except           ( throwError
 import           Control.Exception
 import           Control.Monad.Reader           ( MonadReader
                                                 , ReaderT
-                                                , ask
+                                                , asks
                                                 , runReaderT
                                                 )
 import           Data.Foldable                  ( traverse_ )
@@ -63,7 +63,7 @@ instance Notion AppM where
   addSubPage highlight = do
     userId <- AppM loadUserId
     AppM $ writeHighlight highlight userId
-  getSubPages pageId = AppM getHighlights
+  getSubPages = AppM getHighlights
 
 instance Highlights AppM where
   parseKindleHighlights = pure . parseHighlights
@@ -89,14 +89,14 @@ newtype PageId = PageId String deriving (Show)
 newtype Content = Content String
 class (MonadError BlowUp m, MonadReader Args m) => Notion m where
   addSubPage :: Highlight -> m ()
-  getSubPages :: PageId -> m [Highlight]
+  getSubPages :: m [Highlight]
 
 updateNotion :: (FS m, Notion m, Highlights m, MonadReader Args m) => m ()
 updateNotion = do
-  (Args _ parentPageId kindlePath) <- ask
+  kindlePath <- asks highlightsPath
   kindleFile <- readF $ kindlePath </> "documents/My Clippings.txt"
   kindleHighlights                 <- parseKindleHighlights kindleFile
-  currentHighlights                <- getSubPages (PageId parentPageId)
+  currentHighlights                <- getSubPages 
   let newHighlighs = filter
         (\h -> not $ any
           (\cH -> title cH == title h && content cH == content h)

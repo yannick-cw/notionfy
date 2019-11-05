@@ -96,10 +96,9 @@ writeHighlight highlight userId = do
     $ liftA3 (,,) randomIO randomIO randomIO
   (_, parentPageId) <- asks notionConf
   opts              <- lift cookieOpts
-  now               <- liftIO getCurrentTime
   let transaction =
-        Transaction { operations = header ++ contentPart ++ seperator }
-      header =
+        Transaction { operations = titlePart ++ contentPart ++ seperator }
+      titlePart =
         [ addSegment headerId "sub_header" parentPageId
         , addAfter headerId parentPageId
         , addContent headerId ((title :: Highlight -> String) highlight)
@@ -124,11 +123,11 @@ writeHighlight highlight userId = do
     , table           = "block"
     , args            = ObjArgs (fromList [("id", S $ toString opId)])
     }
-  addContent opId content = Operation { NotionClient.id = toString opId
+  addContent opId opContent = Operation { NotionClient.id = toString opId
                                       , path = ["properties", "title"]
                                       , command         = "set"
                                       , table           = "block"
-                                      , args            = ArrayArgs [[content]]
+                                      , args            = ArrayArgs [[opContent]]
                                       }
   addSegment opId _type parentId = Operation
     { NotionClient.id = toString opId
@@ -185,8 +184,8 @@ getHighlights = do
         titles
           >>= ( maybeToList
               . (\case
-                  [[[title]], [[content]]] ->
-                    Just $ Highlight { title = title, content = content }
+                  [[[t]], [[c]]] ->
+                    Just $ Highlight { title = t, content = c }
                   _ -> Nothing
                 )
               )
@@ -212,7 +211,7 @@ cookieOpts = do
   (token, _) <- asks notionConf
   now        <- liftIO getCurrentTime
   let expires = addUTCTime (1440 * 3000) now
-      cookie  = Cookie "token_v2"
+      c  = Cookie "token_v2"
                        (pack token)
                        expires
                        "notion.so"
@@ -223,7 +222,7 @@ cookieOpts = do
                        False
                        True
                        True
-      jar   = createCookieJar [cookie]
+      jar   = createCookieJar [c]
       opts  = defaults :: Options
       opts' = opts & cookies ?~ jar
   return opts'

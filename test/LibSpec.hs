@@ -38,9 +38,9 @@ instance Notion TestApp where
   addSubPage highlight = do
     args <- ask
     tell [AddPage (notionId args) (title highlight) (content highlight)]
-  getSubPages (PageId title) = do
+  getSubPages  = do
     args <- ask
-    tell [GetPage (notionId args) title]
+    tell [GetPage (notionId args) ( parentPageId args )]
       $> [Highlight { title = "title2", content = "content2" }]
 
 instance Highlights TestApp where

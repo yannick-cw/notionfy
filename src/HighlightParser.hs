@@ -16,8 +16,8 @@ parseHighlights fileContent = s
   s = do
     section <- splitOn "==========\n" fileContent
     maybeToList $ case lines section of
-      [title, info, _, highlight] | notNull title && notNull highlight ->
-        Just $ Highlight title highlight
-      ss -> Nothing
+      [t, _, _, highlight] | notNull t && notNull highlight ->
+        Just $ Highlight t highlight
+      _ -> Nothing
 
 
