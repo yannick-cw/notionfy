@@ -35,10 +35,10 @@ argsParser =
                "Your notion token, found in the token_v2 cookie when you open notion in the browser"
           )
     <*> strOption
-          (  long "parent"
+          (  long "page"
           <> short 'p'
           <> help
-               "Id of the page to which the highlights should be added, you find it in the url if you open the page in the browser"
+               "Id of the page to which the highlights should be added, you find it in the url if you open the page in the browser (uuid)"
           )
     <*> strOption
           (long "kindle" <> short 'k' <> help
