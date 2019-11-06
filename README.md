@@ -1,4 +1,4 @@
-# notionfy: 📓 to 🏗 -> ♥
+# notionfy: 📓 to 🗒 -> ♥
 
 ### Sync your Kindle highlights to [Notion](https://www.notion.so/)
 
