@@ -25,7 +25,7 @@ On Mac you may also give it permission to run in `System Preferences -> Security
 4. run `notionfy-exe` with:
 
 ```bash
-notionfy-exe -n "notion_token" -p "parent_page_id" -k "kindle_path"
+notionfy -n "notion_token" -p "parent_page_id" -k "kindle_path"
 ```
 
 5. See the highlights added to notion page
