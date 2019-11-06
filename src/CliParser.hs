@@ -1,6 +1,9 @@
+{-# LANGUAGE LambdaCase #-}
+
 module CliParser
   ( Args(..)
   , parseArgs
+  , parseToUUID
   , HasNotion(..)
   )
 where
@@ -15,8 +18,17 @@ class HasNotion r where
 instance HasNotion Args where
   notionConf r = (notionId r, parentPageId r)
 
+parseToUUID :: String -> String
+parseToUUID rawId =
+  (zipWith (,) [(0 :: Int) ..] rawId)
+    >>= (\case
+          (p, c) | p == 7 || p == 11 || p == 15 || p == 19 -> [c, '-']
+          (_, c) -> [c]
+        )
+
 parseArgs :: IO Args
-parseArgs = execParser opts
+parseArgs = (\a -> a { parentPageId = parseToUUID $ parentPageId a })
+  <$> execParser opts
  where
   opts = info
     (argsParser <**> helper)
