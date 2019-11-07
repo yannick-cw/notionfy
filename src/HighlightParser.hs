@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE LambdaCase #-}
 
 module HighlightParser
   ( Highlight(..)
@@ -6,21 +7,27 @@ module HighlightParser
   )
 where
 
-import           Data.List.Split
 import           Data.List.Extra                ( notNull )
-import           Data.Maybe                     ( maybeToList )
+import           Data.Either.Extra              ( mapLeft )
+import           Text.ParserCombinators.Parsec
+import           AppErrors
 
 data Highlight = Highlight { title :: String, content :: String} deriving (Show, Eq)
 
-parseHighlights :: String -> [Highlight]
-parseHighlights fileContent = s
+parseHighlights :: String -> Either BlowUp [Highlight]
+parseHighlights fileContent = do
+  rawHighlights <- mapLeft (ParsErr . show) (parse highlights "" fileContent)
+  return
+    $   rawHighlights
+    >>= (\case
+          [t, _, _, highlight, _]
+            | notNull t && notNull highlight && (highlight /= "")
+            -> [Highlight t highlight]
+          _ -> []
+        )
+
  where
-  s = do
-    section <- filter (/= '\r') <$> splitOn "==========\r\n" fileContent
-    maybeToList $ case lines section of
-      [t, _, _, highlight]
-        | notNull t && notNull highlight && (highlight /= "") -> Just
-        $ Highlight t highlight
-      _ -> Nothing
-
-
+  highlights   = endBy oneHighlight eoh
+  oneHighlight = sepBy line (string "\r\n")
+  line         = many (noneOf "=\r\n")
+  eoh          = string "==========\r\n"

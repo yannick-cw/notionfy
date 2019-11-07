@@ -66,7 +66,7 @@ instance Notion AppM where
   getSubPages = AppM getHighlights
 
 instance Highlights AppM where
-  parseKindleHighlights = pure . parseHighlights
+  parseKindleHighlights = AppM . ExceptT . return . parseHighlights
 
 runUpdate :: IO ()
 runUpdate = do
@@ -93,10 +93,10 @@ class (MonadError BlowUp m, MonadReader Args m) => Notion m where
 
 updateNotion :: (FS m, Notion m, Highlights m, MonadReader Args m) => m ()
 updateNotion = do
-  kindlePath <- asks highlightsPath
-  kindleFile <- readF $ kindlePath </> "documents/My Clippings.txt"
-  kindleHighlights                 <- parseKindleHighlights kindleFile
-  currentHighlights                <- getSubPages 
+  kindlePath        <- asks highlightsPath
+  kindleFile        <- readF $ kindlePath </> "documents/My Clippings.txt"
+  kindleHighlights  <- parseKindleHighlights kindleFile
+  currentHighlights <- getSubPages
   let newHighlighs = filter
         (\h -> not $ any
           (\cH -> title cH == title h && content cH == content h)

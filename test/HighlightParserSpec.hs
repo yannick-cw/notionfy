@@ -8,7 +8,7 @@ spec =
   describe "highlightParser"
     $          it "parses the highlights from file"
     $          parseHighlights exampleFileContent
-    `shouldBe` expectedHighlights
+    `shouldBe` (Right expectedHighlights)
 
 expectedHighlights =
   [ Highlight { title = "Blindsight (Peter Watts)", content = "chaff" }
@@ -25,7 +25,7 @@ exampleFileContent =
 \- Ihr Lesezeichen bei Position 1420 | Hinzugefügt am Samstag, 3. Januar 2015 19:14:54\r\n\
 \\r\n\
 \\r\n\
-\==========\r\n\
+\a==========\r\n\
 \Blindsight (Peter Watts)\r\n\
 \- Ihre Markierung bei Position 1446-1446 | Hinzugefügt am Sonntag, 7. Mai 2017 22:26:04\r\n\
 \\r\n\

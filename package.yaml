@@ -13,6 +13,8 @@ tests:
 copyright: 2019 Yannick
 maintainer: https://www.dev-log.me
 dependencies:
+- either
+- parsec
 - transformers
 - random
 - containers
