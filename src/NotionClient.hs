@@ -47,7 +47,6 @@ import           Data.HashMap.Strict            ( keys
 import           Data.UUID
 import           Data.List.Split                ( splitWhen )
 import           Control.Lens
-import           Control.Applicative            ( liftA3 )
 import           HighlightParser                ( Highlight(..) )
 import           GHC.Generics
 import           System.Random                  ( randomIO )
@@ -92,8 +91,8 @@ instance ToJSON Transaction
 writeHighlight
   :: HasNotion r => Highlight -> String -> ExceptT BlowUp (ReaderT r IO) ()
 writeHighlight highlight userId = do
-  (headerId, contentId, seperatorId) <- liftIO
-    $ liftA3 (,,) randomIO randomIO randomIO
+  (headerId, contentId, seperatorId) <-
+    liftIO $ (,,) <$> randomIO <*> randomIO <*> randomIO
   (_, parentPageId) <- asks notionConf
   opts              <- lift cookieOpts
   let transaction =
@@ -124,11 +123,11 @@ writeHighlight highlight userId = do
     , args            = ObjArgs (fromList [("id", S $ toString opId)])
     }
   addContent opId opContent = Operation { NotionClient.id = toString opId
-                                      , path = ["properties", "title"]
-                                      , command         = "set"
-                                      , table           = "block"
-                                      , args            = ArrayArgs [[opContent]]
-                                      }
+                                        , path = ["properties", "title"]
+                                        , command = "set"
+                                        , table = "block"
+                                        , args = ArrayArgs [[opContent]]
+                                        }
   addSegment opId _type parentId = Operation
     { NotionClient.id = toString opId
     , path            = []
@@ -211,7 +210,7 @@ cookieOpts = do
   (token, _) <- asks notionConf
   now        <- liftIO getCurrentTime
   let expires = addUTCTime (1440 * 3000) now
-      c  = Cookie "token_v2"
+      c       = Cookie "token_v2"
                        (pack token)
                        expires
                        "notion.so"

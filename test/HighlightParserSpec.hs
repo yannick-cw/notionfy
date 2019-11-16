@@ -8,7 +8,7 @@ spec =
   describe "highlightParser"
     $          it "parses the highlights from file"
     $          parseHighlights exampleFileContent
-    `shouldBe` (Right expectedHighlights)
+    `shouldBe` Right expectedHighlights
 
 expectedHighlights =
   [ Highlight { title = "Blindsight (Peter Watts)", content = "chaff" }

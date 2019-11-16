@@ -20,7 +20,7 @@ instance HasNotion Args where
 
 parseToUUID :: String -> String
 parseToUUID rawId =
-  (zipWith (,) [(0 :: Int) ..] rawId)
+  zip [(0 :: Int) ..] rawId
     >>= (\case
           (p, c) | p == 7 || p == 11 || p == 15 || p == 19 -> [c, '-']
           (_, c) -> [c]
@@ -50,7 +50,7 @@ argsParser =
           (  long "page"
           <> short 'p'
           <> help
-               "Id of the page to which the highlights should be added, you find it in the url if you open the page in the browser (uuid)"
+               "Id of the page to which the highlights should be added, you find it in the url if you open the page in the browser"
           )
     <*> strOption
           (long "kindle" <> short 'k' <> help
