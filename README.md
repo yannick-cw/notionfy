@@ -6,9 +6,14 @@ This script reads the `clippings.txt` from your kindle and syncs all the highlig
 
 ### Install
 
-Download the [notionfy](https://github.com/yannick-cw/notionfy/releases/tag/0.1) executable and place it in your `PATH` or run it directly with `./notionfy`. Don't forget to make it executable with `chmod +x notionfy`.
+Download the [notionfy](https://github.com/yannick-cw/notionfy/releases/tag/0.1) executable (for linux or default for Mac) and place it in your `PATH` or run it directly with `./notionfy`. Don't forget to make it executable with `chmod +x notionfy`.
 
 On Mac you may also give it permission to run in `System Preferences -> Security & Privacy`
+
+On Mac you can use homebrew
+```
+brew install yannick-cw/homebrew-tap/notionfy
+```
 
 ### Setup
 
