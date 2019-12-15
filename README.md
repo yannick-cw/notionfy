@@ -3,6 +3,7 @@
 ### Sync your Kindle highlights to [Notion](https://www.notion.so/)
 
 This script reads the `clippings.txt` from your kindle and syncs all the highlight to a selected notion page.
+When rerunning it only appends new clippings.
 
 ### Install
 
