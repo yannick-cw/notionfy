@@ -26,6 +26,7 @@ import           Control.Monad.Except           ( throwError
                                                 , ExceptT(..)
                                                 )
 import           Control.Exception
+import           Data.Text                      ( unpack )
 import           Control.Monad.Reader           ( MonadReader
                                                 , ReaderT
                                                 , asks
@@ -39,6 +40,9 @@ import           HighlightParser
 import           System.Exit                    ( exitFailure )
 import           System.FilePath                ( (</>) )
 import           NotionClient
+import           Data.ByteString               as BS
+                                                ( readFile )
+import           Data.Text.Encoding             ( decodeUtf8 )
 
 
 newtype AppM a = AppM { unWrapAppM :: ExceptT BlowUp (ReaderT Args IO) a }
@@ -57,7 +61,7 @@ instance FS AppM where
     Left  err  -> throwError $ FsErr $ show err
    where
     tryReading :: IO (Either IOError String)
-    tryReading = try $ readFile path
+    tryReading = try $ unpack . decodeUtf8 <$> BS.readFile path
 
 instance Notion AppM where
   addSubPage highlight = do
@@ -94,7 +98,7 @@ class (MonadError BlowUp m, MonadReader Args m) => Notion m where
 updateNotion :: (FS m, Notion m, Highlights m, MonadReader Args m) => m ()
 updateNotion = do
   kindlePath        <- asks highlightsPath
-  kindleFile        <- readF $ kindlePath </> "documents/My Clippings.txt"
+  kindleFile        <- readF $ kindlePath </> "documents" </> "My Clippings.txt"
   kindleHighlights  <- parseKindleHighlights kindleFile
   currentHighlights <- getSubPages
   let newHighlighs = filter

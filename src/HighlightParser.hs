@@ -16,7 +16,8 @@ data Highlight = Highlight { title :: String, content :: String} deriving (Show,
 
 parseHighlights :: String -> Either BlowUp [Highlight]
 parseHighlights fileContent = do
-  rawHighlights <- mapLeft (ParsErr . show) (parse highlights "" fileContent)
+  rawHighlights <- mapLeft (ParsErr . show)
+                           (parse highlights "" (removeReturn fileContent))
   return
     $   rawHighlights
     >>= (\case
@@ -27,7 +28,8 @@ parseHighlights fileContent = do
         )
 
  where
+  removeReturn = filter (/= '\r')
   highlights   = endBy oneHighlight eoh
-  oneHighlight = sepBy line (string "\r\n")
-  line         = many (noneOf "=\r\n")
-  eoh          = string "==========\r\n"
+  oneHighlight = sepBy line (string "\n")
+  line         = many (noneOf "=\n")
+  eoh          = string "==========\n"
