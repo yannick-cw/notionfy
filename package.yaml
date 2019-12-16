@@ -36,7 +36,7 @@ dependencies:
 - hspec
 - base >= 4.7 && < 5
 name: notionfy
-version: 0.1.0.0
+version: 0.1.1
 extra-source-files:
 - README.md
 - ChangeLog.md
