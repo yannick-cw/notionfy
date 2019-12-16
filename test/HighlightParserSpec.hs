@@ -11,6 +11,9 @@ spec = describe "highlightParser" $ do
   it "parses a windows highlights file"
     $          parseHighlights winExampleFileContent
     `shouldBe` Right expectedHighlights
+  it "parses file from issue3"
+    $          parseHighlights issue3Example
+    `shouldBe` Right issue3Highlights
 
 expectedHighlights =
   [ Highlight { title = "Blindsight (Peter Watts)", content = "chaff" }
@@ -19,6 +22,17 @@ expectedHighlights =
               }
   , Highlight { title   = "Tools of Titans (Timothy Ferriss)"
               , content = "What is the best or most"
+              }
+  ]
+
+issue3Highlights =
+  [ Highlight
+    { title   = "Indistractable (Nir Eyal;)"
+    , content =
+      "The Fogg Behavior Model states that for a behavior (B) to occur, three things must be present at the same time: motivation (M), ability (A), and a trigger (T). More succinctly, B = MAT."
+    }
+  , Highlight { title   = "Indistractable (Nir Eyal;)"
+              , content = "Is this trigger serving me, or am I serving it?"
               }
   ]
 
@@ -74,4 +88,16 @@ winExampleFileContent =
 \- Ihr Lesezeichen auf Seite 307 | Position 3793 | Hinzugefügt am Mittwoch, 16. Oktober 2019 11:34:47\n\
 \\n\
 \\n\
+\==========\n"
+
+issue3Example =
+  "Indistractable (Nir Eyal;)\n\
+\- Your Highlight on page 69 | Location 1051-1052 | Added on Friday, October 11, 2019 8:50:35 AM\n\
+\\n\
+\The Fogg Behavior Model states that for a behavior (B) to occur, three things must be present at the same time: motivation (M), ability (A), and a trigger (T). More succinctly, B = MAT.\n\
+\==========\n\
+\Indistractable (Nir Eyal;)\n\
+\- Your Highlight on page 71 | Location 1084-1085 | Added on Friday, October 11, 2019 9:02:49 AM\n\
+\\n\
+\Is this trigger serving me, or am I serving it?\n\
 \==========\n"

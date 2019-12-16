@@ -28,8 +28,11 @@ parseHighlights fileContent = do
         )
 
  where
-  removeReturn = filter (/= '\r')
-  highlights   = endBy oneHighlight eoh
-  oneHighlight = sepBy line (string "\n")
-  line         = many (noneOf "=\n")
-  eoh          = string "==========\n"
+  removeReturn   = filter (/= '\r')
+  highlights     = endBy oneHighlight eoh
+  oneHighlight   = sepBy line eol
+  line           = manyTill anyChar (noHighlightSep <|> noEol)
+  noHighlightSep = try $ lookAhead eoh
+  noEol          = try $ lookAhead eol
+  eoh            = string "==========\n"
+  eol            = string "\n"
