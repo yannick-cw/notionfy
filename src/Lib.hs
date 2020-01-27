@@ -64,9 +64,7 @@ instance FS AppM where
     tryReading = try $ unpack . decodeUtf8 <$> BS.readFile path
 
 instance Notion AppM where
-  addSubPage highlight = do
-    userId <- AppM loadUserId
-    AppM $ writeHighlight highlight userId
+  addSubPage highlight = AppM $ writeHighlight highlight
   getSubPages = AppM getHighlights
 
 instance Highlights AppM where
