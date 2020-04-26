@@ -64,3 +64,8 @@ notionfy -n "notion_token" -p "parent_page_id" -k "kindle_path"
 
 ![Highlights](./highlights.png)
 
+
+## Changelog
+- `0.2.0`
+  - Fixing changing Notion api which made syncing impossible
+  - Moving to Scala codebase
