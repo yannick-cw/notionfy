@@ -17,7 +17,7 @@ graalVMNativeImageOptions ++= Seq(
   "--allow-incomplete-classpath",
   "--report-unsupported-elements-at-runtime",
   "--initialize-at-build-time",
-  "-H:EnableURLProtocols=https",
+  "--enable-https",
   "-J-Xmx8g"
 ) ++ maybeGraalDockerVersion.map(_ => "--static")
 
