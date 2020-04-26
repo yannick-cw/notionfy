@@ -9,22 +9,25 @@ When rerunning it only appends new clippings.
 
 ### Linux
 
-Download the [notionfy](https://github.com/yannick-cw/notionfy/releases/tag/0.1) executable (for linux or default for Mac) and place it in your `PATH` or run it directly with `./notionfy`. Don't forget to make it executable with `chmod +x notionfy`.
+Download the [notionfy](https://github.com/yannick-cw/notionfy/releases/tag/0.2.0) linux zip, unzip it and place notionfy in your `PATH` or run it directly with `./notionfy`. Don't forget to make it executable with `chmod +x notionfy`.
 
-On Mac you may also give it permission to run in `System Preferences -> Security & Privacy`
 
 #### Mac
 On Mac you can use homebrew
 ```
 brew install yannick-cw/homebrew-tap/notionfy
 ```
+Alternatively:
+
+Download the [notionfy](https://github.com/yannick-cw/notionfy/releases/tag/0.2.0) mac zip, unzip it and place notionfy in your `PATH` or run it directly with `./notionfy`. Don't forget to make it executable with `chmod +x notionfy`.
+
+On Mac you may also give it permission to run in `System Preferences -> Security & Privacy`
 
 #### Windows
 
-1. Download the zip for the latest windows [release](https://github.com/yannick-cw/notionfy/releases/download/0.1/notionfy_win.zip) file to .e.g `Downloads`
-2. Right click extract all (to any folder you choose)
-3. Open power shell (or any shell)
-4. Change Directory to the unzipped path, e.g.: `cd .\Downloads\notionfy_win\`
+1. Download the zip for the latest windows [release](https://github.com/yannick-cw/notionfy/releases/download/0.2.0/notionfy.exe) file to .e.g `Downloads`
+2. Open power shell (or any shell)
+4. Change Directory to the exe's path, e.g.: `cd .\Downloads`
 5. `.\notionfy.exe`
 Should give you the outcome
 ```

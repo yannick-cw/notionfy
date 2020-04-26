@@ -16,7 +16,9 @@ graalVMNativeImageOptions ++= Seq(
   "--no-fallback",
   "--allow-incomplete-classpath",
   "--report-unsupported-elements-at-runtime",
-  "--initialize-at-build-time"
+  "--initialize-at-build-time",
+  "-H:EnableURLProtocols=https",
+  "-J-Xmx8g"
 ) ++ maybeGraalDockerVersion.map(_ => "--static")
 
 val nativeImagePath = sys.env.get("NATIVE_IMAGE_PATH")
