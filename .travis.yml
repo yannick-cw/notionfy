@@ -1,81 +1,72 @@
-# Use new container infrastructure to enable caching
-sudo: false
+language: scala
 
-# Do not choose a language; we provide our own build tools.
-language: generic
+scala:
+  - 2.13.1
 
-# Caching so the next build will be fast too.
-cache:
-  directories:
-    - $HOME/.ghc
-    - $HOME/.cabal
-    - $HOME/.stack
-    - $TRAVIS_BUILD_DIR/.stack-work
+jdk:
+  - openjdk11
 
-# The different configurations we want to test. We have BUILD=cabal which uses
-# cabal-install, and BUILD=stack which uses Stack. More documentation on each
-# of those below.
-#
-# We set the compiler values here to tell Travis to use a different
-# cache file per set of arguments.
-#
-# If you need to have different apt packages for each combination in the
-# matrix, you can use a line such as:
-#     addons: {apt: {packages: [libfcgi-dev,libgmp-dev]}}
-matrix:
+jobs:
   include:
-    # The Stack builds. We can pass in arbitrary Stack arguments via the ARGS
-    # variable, such as using --stack-yaml to point to a different file.
-    - env: BUILD=stack ARGS="--resolver lts-14"
-      compiler: ": #stack 8.6.5"
-      addons: { apt: { packages: [libgmp-dev] } }
+    - os: linux
+      env: GRAAL_DOCKER_VERSION=20.0.0
+    - os: osx
+    - os: windows
+      language: shell
+      env: NATIVE_IMAGE_PATH="C:/Program Files/GraalVM/graalvm-ce-java11-20.0.0/bin/native-image.cmd"
 
-    # Build on macOS in addition to Linux
-    - env: BUILD=stack ARGS="--resolver lts-14"
-      compiler: ": #stack 8.6.5 osx"
-      os: osx
+services:
+  - docker
+
+addons:
+  homebrew:
+    update: true
+    taps: graalvm/tap
+    casks:
+      - graalvm-ce-java11
 
 before_install:
-  # Using compiler above sets CC to an invalid value, so unset it
-  - unset CC
-
-  # Download and unpack the stack executable
-  - export PATH=/opt/ghc/$GHCVER/bin:/opt/cabal/$CABALVER/bin:$HOME/.local/bin:/opt/alex/$ALEXVER/bin:/opt/happy/$HAPPYVER/bin:$HOME/.cabal/bin:$PATH
-  - mkdir -p ~/.local/bin
-  - |
-    if [ `uname` = "Darwin" ]
-    then
-      travis_retry curl --insecure -L https://get.haskellstack.org/stable/osx-x86_64.tar.gz | tar xz --strip-components=1 --include '*/stack' -C ~/.local/bin
-    else
-      travis_retry curl -L https://get.haskellstack.org/stable/linux-x86_64.tar.gz | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
-    fi
-
-    # Use the more reliable S3 mirror of Hackage
-    mkdir -p $HOME/.cabal
-    echo 'remote-repo: hackage.haskell.org:http://hackage.fpcomplete.com/' > $HOME/.cabal/config
-    echo 'remote-repo-cache: $HOME/.cabal/packages' >> $HOME/.cabal/config
+  - |-
+    case $TRAVIS_OS_NAME in
+      windows)
+        choco install graalvm sbt
+        eval $(powershell -NonInteractive -Command 'write("export PATH=`"" + ([Environment]::GetEnvironmentVariable("PATH","Machine") + ";" + [Environment]::GetEnvironmentVariable("PATH","User")).replace("\","/").replace("C:","/c").replace(";",":") + ":`$PATH`"")')
+        ;;
+    esac
 
 install:
-  - echo "$(ghc --version) [$(ghc --print-project-git-commit-id 2> /dev/null || echo '?')]"
-  - if [ -f configure.ac ]; then autoreconf -i; fi
-  - |
-    set -ex
-    # Build the dependencies
-    stack --no-terminal --install-ghc $ARGS test --bench --only-dependencies
+  - |-
+    case $TRAVIS_OS_NAME in
+      osx)
+        export PATH=/Library/Java/JavaVirtualMachines/graalvm-ce-java11-20.0.0/Contents/Home/bin:"$PATH"
+        gu install native-image
+        ;;
+      windows)
+        gu.cmd install native-image
+        ;;
+    esac
 
 script:
-  - |
-    set -ex
-    stack --no-terminal $ARGS test --bench --no-run-benchmarks --haddock --no-haddock-deps
-    stack --no-terminal build --force-dirty
+  - |-
+    case $TRAVIS_OS_NAME in
+      windows)
+        sbt test
+        ./scripts/windows.bat
+        ;;
+      *)
+        sbt test 
+        sbt "graalvm-native-image:packageBin"
+        ;;
+    esac
 
 before_deploy:
   - ./scripts/release.sh
+
 deploy:
   provider: releases
   skip_cleanup: true
   api_key:
-    secure: hh2IBMCwL3F6Ku3ThlahCX72SiHMlobIwH6uqfbMZzBCgOyDwFUsad8L4ktCqZABY5sUzfzIx3Pe6aGy4owfjqVm10nODOU4HA6kcCJrnHPkonySh6wASqjOiw9rHOty6p2Sn7Urqx1Ox/CHGgKMGKCcxBujwcN/4uPu1vCeTCEE1V5rFLaLmhT8bHFV2JjCpEEkRQmoPgTfJwJsNKnblw4A0z3weD7BNuiBXmQLBkdP1fUna+a1++WkWEIAybjqFEtVinfuJVQWCaL2MAfS5qCefrga7/nmP0AAKJPVc65YpGC1osTibm00vLnqE7wgXZT38xVjIdwzlnGBjnsoIJGiVLBAPDlg+kUcfuXQoi94JQQ9/0A0vADhra1WQeaf7a2m/bhpmHvq6VnY2X3nLqOZVkylkiE019y0xZ+qQc7uOT8b+zX3zWMrqrUJ/d/u2a2Iotd81WCdVuSY1fVX7GT+rqfDshwWPvSu9FNcrMSC11Nv9hIB6i8BfPKJo8l0SIJeEgyaXnNaznf+vO1KNJYYBijKEZmeVdHtbvUOH7ze60KnlgVTF/wmcE2JVJTtpRBQL1SDH2KkF8I+L1CfwdhylsNRoW93sMJBLFJG2lHEfZlAd4WV7ekKnuigHYI+pd5tDE5a+A1ASnm1vwR096Bz//1crtBJCjuawH/hikQ=
+    secure: pWzL0PBhY8UiuEMA3/oh7QkZVUT2OMY61CmzfT3r/2BU3mBuiHubB2BAmPlpY+xIVcNMKu1SHxRbtHoLdejWStUtY5+23UplheTE7BUFw61xlK9aZMliAukJeVPNJEmx4lI150pH53UJ3wNCPbkHcJIVNzKdL4g2twXXXutfStRgNuaOHWxNAZOrTb+EovyhFSHuluIu0hA7cwXVPbJANkaEVVxvRRNo/FOVP7wkhQ2+BPYQcYdUx4y/qUHyQF+jml3z0RX54bNMoj022EYDY2AbSSWOocDPK+7R80LQ8LG2y51RiDdtP/DEprgieKvI6w2GH7GRrb0Li5fszndMBNzNWc0tGGXGJcmDo/Y9GfSSG1urcWPuZtO9xpYGFeIhiB1CvYvG3gE4zM4WO5Ex4TmgbZOObtNF3CVf4a340R+pWDnVBfYRA7rFoH8082w1x6hqb/jXcxCvLTOMiMoNh3elMZQ5DlHNnUCcDxW8SUp+P1g5vH966mey1U9Ok9E83va+P4u/L4p/M05cTggkERmPmboQyAJGxlr9Fdjtg7fxogjxGe1aGDP3XKRoz2dlfGRSy6kM0QLnqs1GlM2mUlA6gfAqPxQHS36d8rMxTfrIhXdTikX0rlNlLMil07Od9VcNMBw5vLBv+fVyP50pf9xC2Pxr4Rhtl7z+oJLDzZY=
   file: release/*
   file_glob: true
   on:

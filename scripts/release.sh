@@ -1,21 +1,12 @@
 #!/bin/bash
 
-echo "Running script to create release .zip"
+# Exit on failure
+set -e
 
-if [ `uname` = "Darwin" ]
-then
-  mkdir release  
-  cp .stack-work/dist/x86_64-osx/Cabal-2.4.0.1/build/notionfy-exe/notionfy-exe ./release/notionfy &&\
-  cd release &&\
-  zip notionfy_mac.zip notionfy
-  tar -zcvf notionfy_mac.tar.gz notionfy
-  rm notionfy
-  cd ..
+mkdir release
+
+if [ $TRAVIS_OS_NAME = windows ]; then
+  mv target/graalvm-native-image/notionfys.exe release/notionfy.exe
 else
-  mkdir release &&\
-  cp .stack-work/dist/x86_64-linux/Cabal-2.4.0.1/build/notionfy-exe/notionfy-exe ./release/notionfy &&\
-  cd release &&\
-  zip notionfy_x86_64-linux.zip notionfy
-  rm notionfy
-  cd ..
-fi 
+  mv target/graalvm-native-image/notionfys "release/notionfy_$TRAVIS_OS_NAME"
+fi
