@@ -76,9 +76,7 @@ object Notion extends Notion[AppM] {
       Args(token, page, _, _) <- AppM.ask[IO, Args]
       reqBody = PageChunkRequest(page)
       res     = reqRes[PageChunkRequest, PageChunkResponse](reqBody, "loadPageChunk", token)
-      pageChunkResponse <- AppM.liftF(
-        IO.fromEither(res.body.left.map(err => new RuntimeException(err.toString)))
-      )
+      pageChunkResponse <- AppM.liftF(IO.fromEither(res.body))
       highligts = extractHighlights(pageChunkResponse, page)
       userId <- pageChunkResponse.recordMap.notion_user.keys.headOption.fold(noIdErr)(AppM.pure(_))
     } yield (highligts, userId)
