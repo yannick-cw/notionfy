@@ -37,10 +37,10 @@ That means it works so far.
 Now run it with your configuration:
 
 ```
-.\notionfy.exe --token "TOKEN_HERE" --page "PAGE_ID_HERE" --kindle "D:"
+.\notionfy.exe --token "TOKEN_HERE" --page "PAGE_ID_HERE" --kindle "D:/"
 ```
 
-Where token is token form the cookie and page id from the url of the page you want to add the snippets. When I connect my kindle to a windows machine it is mounted as `D:` so check under what path you kindle is mounted and add that instead of `:D`
+Where token is token form the cookie and page id from the url of the page you want to add the snippets. When I connect my kindle to a windows machine it is mounted as `D:/` so check under what path you kindle is mounted and add that instead of `D:/`
 
 ### Setup
 
