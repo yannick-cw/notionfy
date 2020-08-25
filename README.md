@@ -69,3 +69,5 @@ notionfy -n "notion_token" -p "parent_page_id" -k "kindle_path"
 - `0.2.0`
   - Fixing changing Notion api which made syncing impossible
   - Moving to Scala codebase
+- `0.2.3`
+  - updating graalVm version
