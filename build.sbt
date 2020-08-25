@@ -6,7 +6,7 @@ organization in ThisBuild := "notionfys"
 
 scalaVersion in ThisBuild := "2.13.1"
 
-version in ThisBuild := "2.0.3"
+version in ThisBuild := "0.2.3"
 
 enablePlugins(GraalVMNativeImagePlugin)
 
