@@ -9,11 +9,11 @@ jdk:
 jobs:
   include:
     - os: linux
-      env: GRAAL_DOCKER_VERSION=20.0.0
+      env: GRAAL_DOCKER_VERSION=20.2.0
     - os: osx
     - os: windows
       language: shell
-      env: NATIVE_IMAGE_PATH="C:/Program Files/GraalVM/graalvm-ce-java11-20.0.0/bin/native-image.cmd"
+      env: NATIVE_IMAGE_PATH="C:/Program Files/GraalVM/graalvm-ce-java11-20.1.0/bin/native-image.cmd"
 
 services:
   - docker

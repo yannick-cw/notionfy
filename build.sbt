@@ -6,13 +6,13 @@ organization in ThisBuild := "notionfys"
 
 scalaVersion in ThisBuild := "2.13.1"
 
-version in ThisBuild := "2.0.2"
+version in ThisBuild := "2.0.3"
 
 enablePlugins(GraalVMNativeImagePlugin)
 
 mappings in (Compile, packageDoc) := Seq()
 
-val maybeGraalDockerVersion = sys.env.get("GRAAL_DOCKER_VERSION") //e.g. 20.0.0
+val maybeGraalDockerVersion = sys.env.get("GRAAL_DOCKER_VERSION") //e.g. 20.2.0
 
 graalVMNativeImageOptions ++= Seq(
   "--no-fallback",
