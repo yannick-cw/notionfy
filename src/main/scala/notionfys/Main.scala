@@ -16,7 +16,7 @@ object Main
     extends CommandIOApp(
       name = "notionfy",
       header = "Sync your Kindle highlights to Notion",
-      version = "2.0.2"
+      version = "0.2.4"
     ) {
 
   implicit val F: FS[AppM]         = FS
@@ -27,7 +27,7 @@ object Main
   private def errorMsg(errShort: String, errLong: String, args: Args): IO[ExitCode] =
     IO(
       println(
-        s"Unfortunately syncing failed, you can run with --verbose to see more details about what is going on. Please report the output to https://github.com/yannick-cw/notionfys, so I can fix it. Here is the raw error:\n${if (args.verbose)
+        s"\n\nUnfortunately syncing failed, you can run with --verbose to see more details about what is going on. Please report the output to https://github.com/yannick-cw/notionfys, so I can fix it. Here is the error:\n\n${if (args.verbose)
           errLong
         else errShort}"
       )
@@ -64,6 +64,22 @@ object Main
                   e.toString ++ "\nwith Stacktrace:\n" ++ formatTrace(err.getStackTrace)
                     ++ "\nwith response body:\n" ++ b,
                   args
+                )
+              case FileNotFoundErr(p) =>
+                val notFoundErr = s"Did not find the kindle clippings file under the path $p"
+                errorMsg(notFoundErr, notFoundErr, args)
+              case HttpResponseError(code, body) =>
+                errorMsg(
+                  errShort = s"Http request failed with status code: $code",
+                  errLong = s"Http request failed with status code: $code and body: $body",
+                  args = args
+                )
+              case DecodingError(msg, body) =>
+                errorMsg(
+                  errShort = s"Http request failed while decoding the response with: $msg",
+                  errLong =
+                    s"Http request failed while decoding the response with: $msg and body: $body",
+                  args = args
                 )
               case NonFatal(err) => errorMsg(err, args)
             }

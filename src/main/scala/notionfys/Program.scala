@@ -13,17 +13,20 @@ object Program {
       Ask: ApplicativeAsk[F, Args]
   ): F[Unit] =
     for {
-      kindlePath                  <- Ask.reader(_.kindle)
-      _                           <- Console.verboseLog(s"Reading highlights from Kindle at $kindlePath....")
-      kindleFile                  <- FS.readF(kindlePath / "documents" / "My Clippings.txt")
-      _                           <- Console.verboseLog("Done readingkindhle highlights")
-      kindleHighlights            <- Highlights.parseKindleHighlights(kindleFile)
+      kindlePath       <- Ask.reader(_.kindle)
+      _                <- Console.verboseLog(s"Reading highlights from Kindle at $kindlePath....")
+      kindleFile       <- FS.readF(kindlePath / "documents" / "My Clippings.txt")
+      _                <- Console.verboseLog("Done reading kindle highlights")
+      kindleHighlights <- Highlights.parseKindleHighlights(kindleFile)
+      _ <- Console.verboseLog(
+        s"\nFound Highlights locally:\n${kindleHighlights.map(_.title).mkString("\n")}\n"
+      )
       _                           <- Console.verboseLog("Parsed kindle highlights to internal format")
       _                           <- Console.verboseLog("Fetching highlights from Notion...")
       (currentHighlights, userId) <- Notion.getHighlights
-      _                           <- Console.verboseLog("Fetched current highlghts from Notion")
+      _                           <- Console.verboseLog("Fetched current highlights from Notion")
       _ <- Console.verboseLog(
-        s"\nFound Highlights:\n${currentHighlights.map(_.title).mkString("\n")}\n"
+        s"\nFound Highlights in Notion:\n${currentHighlights.map(_.title).mkString("\n")}\n"
       )
       newHighlights = kindleHighlights.filterNot(
         h => currentHighlights.exists(cH => cH.title == h.title && cH.content == h.content)
