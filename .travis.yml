@@ -9,21 +9,11 @@ jdk:
 jobs:
   include:
     - os: linux
-      env: GRAAL_DOCKER_VERSION=20.2.0
     - os: osx
     - os: windows
       language: shell
-      env: NATIVE_IMAGE_PATH="C:/Program Files/GraalVM/graalvm-ce-java11-20.1.0/bin/native-image.cmd"
+      env: NATIVE_IMAGE_PATH="C:/Program Files/GraalVM/graalvm-ce-java11-20.2.0/bin/native-image.cmd"
 
-services:
-  - docker
-
-addons:
-  homebrew:
-    update: true
-    taps: graalvm/tap
-    casks:
-      - graalvm-ce-java11
 
 before_install:
   - |-
@@ -37,10 +27,6 @@ before_install:
 install:
   - |-
     case $TRAVIS_OS_NAME in
-      osx)
-        export PATH=/Library/Java/JavaVirtualMachines/graalvm-ce-java11-20.2.0/Contents/Home/bin:"$PATH"
-        gu install native-image
-        ;;
       windows)
         gu.cmd install native-image
         ;;
@@ -55,7 +41,7 @@ script:
         ;;
       *)
         sbt test 
-        sbt "graalvm-native-image:packageBin"
+        sbt "nativeImage"
         ;;
     esac
 
