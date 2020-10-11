@@ -1,5 +1,7 @@
 package notionfys
 
+import java.util.UUID
+
 import App._
 import sttp.client._
 import sttp.client.circe._
@@ -19,7 +21,7 @@ trait Notion[F[_]] {
 
 object Notion extends Notion[AppM] {
   implicit val backend: SttpBackend[Identity, Nothing, NothingT] = HttpURLConnectionBackend()
-  private val notionUrl                                          = "https://www.notion.so/api/v3"
+  private val notionUrl = "https://www.notion.so/api/v3"
   private val noIdErr: AppM[ju.UUID] = MonadError[AppM, Throwable].raiseError(
     new RuntimeException("Did not find a notion userId in pageChunkResponse")
   )
@@ -86,7 +88,7 @@ object Notion extends Notion[AppM] {
         token
       )
       highlights = extractHighlights(pageChunkResponse, page)
-      userId <- pageChunkResponse.recordMap.notion_user.keys.headOption.fold(noIdErr)(AppM.pure(_))
+      userId <- pageChunkResponse.recordMap.block.get(page).flatMap(_.value.created_by_id).fold(noIdErr)(AppM.pure(_))
     } yield (highlights, userId)
 
   private def reqRes[A: Encoder, Res: Decoder](body: A, path: String, token: String) =
@@ -100,7 +102,7 @@ object Notion extends Notion[AppM] {
           .send()
       )
       resV <- IO.fromEither(res.body.left.map {
-        case HttpError(body)                 => HttpResponseError(res.code, body)
+        case HttpError(body) => HttpResponseError(res.code, body)
         case DeserializationError(body, err) => DecodingError(err.getMessage, body)
       })
     } yield resV)
@@ -114,10 +116,10 @@ object Notion extends Notion[AppM] {
         .toList
         .collect {
           case List(
-              Value(Some("sub_header"), Some(propsT), _),
-              Value(Some("text"), Some(propsH), _),
-              Value(Some("divider"), None, _)
-              ) =>
+          Value(Some("sub_header"), Some(propsT), _, _),
+          Value(Some("text"), Some(propsH), _, _),
+          Value(Some("divider"), None, _, _)
+          ) =>
             (propsT, propsH)
         }
       titleA <- title.title.toList.flatMap(_.headOption.toList.flatMap(_.headOption.toList))
@@ -131,7 +133,7 @@ sealed trait Arg
 object Arg {
   implicit val encoder: Encoder[Arg] = Encoder.instance {
     case arr: ArrayArgs => arr.asJson
-    case obj: ObjArgs   => obj.asJson
+    case obj: ObjArgs => obj.asJson
   }
 }
 
@@ -142,14 +144,14 @@ object ArrayArgs {
 }
 
 case class ObjArgs(
-    id: ju.UUID,
-    version: Option[Int],
-    alive: Option[String],
-    created_by: Option[ju.UUID],
-    parent_id: Option[ju.UUID],
-    parent_table: Option[String],
-    `type`: Option[String]
-) extends Arg
+                    id: ju.UUID,
+                    version: Option[Int],
+                    alive: Option[String],
+                    created_by: Option[ju.UUID],
+                    parent_id: Option[ju.UUID],
+                    parent_table: Option[String],
+                    `type`: Option[String]
+                  ) extends Arg
 
 object ObjArgs {
   implicit val encoder: Encoder[ObjArgs] = deriveEncoder[ObjArgs].mapJson(_.dropNullValues)
@@ -188,10 +190,11 @@ object Properties {
 }
 
 case class Value(
-    `type`: Option[String],
-    properties: Option[Properties],
-    content: Option[List[ju.UUID]]
-)
+                  `type`: Option[String],
+                  properties: Option[Properties],
+                  content: Option[List[ju.UUID]],
+                  created_by_id: Option[UUID]
+                )
 
 object Value {
   implicit val decoder: Decoder[Value] = deriveDecoder
@@ -203,7 +206,7 @@ object Block {
   implicit val decoder: Decoder[Block] = deriveDecoder
 }
 
-case class RecordMap(block: Map[ju.UUID, Block], notion_user: Map[ju.UUID, Block])
+case class RecordMap(block: Map[ju.UUID, Block])
 
 object RecordMap {
   implicit val decoder: Decoder[RecordMap] = deriveDecoder
@@ -229,12 +232,12 @@ object Cursor {
 }
 
 case class PageChunkRequest(
-    pageId: ju.UUID,
-    limit: Int,
-    cursor: Cursor,
-    chunkNumber: Int,
-    verticalColumns: Boolean
-)
+                             pageId: ju.UUID,
+                             limit: Int,
+                             cursor: Cursor,
+                             chunkNumber: Int,
+                             verticalColumns: Boolean
+                           )
 
 object PageChunkRequest {
   implicit val encoder: Encoder[PageChunkRequest] = deriveEncoder
