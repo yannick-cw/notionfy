@@ -9,7 +9,7 @@ When rerunning it only appends new clippings.
 
 ### Linux
 
-Download the [notionfy](https://github.com/yannick-cw/notionfy/releases/tag/0.2.x) linux zip, unzip it and place notionfy in your `PATH` or run it directly with `./notionfy`. Don't forget to make it executable with `chmod +x notionfy`.
+Download the [notionfy](https://github.com/yannick-cw/notionfy/releases/tag/0.3.x) linux zip, unzip it and place notionfy in your `PATH` or run it directly with `./notionfy`. Don't forget to make it executable with `chmod +x notionfy`.
 
 
 #### Mac
@@ -19,13 +19,13 @@ brew install yannick-cw/homebrew-tap/notionfy
 ```
 Alternatively:
 
-Download the [notionfy](https://github.com/yannick-cw/notionfy/releases/tag/0.2.x) mac zip, unzip it and place notionfy in your `PATH` or run it directly with `./notionfy`. Don't forget to make it executable with `chmod +x notionfy`.
+Download the [notionfy](https://github.com/yannick-cw/notionfy/releases/tag/0.3.x) mac zip, unzip it and place notionfy in your `PATH` or run it directly with `./notionfy`. Don't forget to make it executable with `chmod +x notionfy`.
 
 On Mac you may also give it permission to run in `System Preferences -> Security & Privacy`
 
 #### Windows
 
-1. Download the zip for the latest windows [release](https://github.com/yannick-cw/notionfy/releases/download/0.2.x/notionfy.exe) file to .e.g `Downloads`
+1. Download the zip for the latest windows [release](https://github.com/yannick-cw/notionfy/releases/download/0.3.x/notionfy.exe) file to .e.g `Downloads`
 2. Open power shell (or any shell)
 4. Change Directory to the exe's path, e.g.: `cd .\Downloads`
 5. `.\notionfy.exe`
@@ -73,3 +73,5 @@ notionfy -n "notion_token" -p "parent_page_id" -k "kindle_path"
   - updating graalVm version
 - `0.2.6`
   - adjusting to notion api change
+- `0.3.0`
+  - Now adds the reference of where the highlight is as first line to the content in Notion
