@@ -12,7 +12,7 @@ trait Highlights[F[_]] {
 
 object Highlights {
 
-  case class ContentPart(title: String, content: String)
+  case class ContentPart(title: String, reference: String, content: String)
   case class TagPart(title: String, tags: NonEmptyList[String])
 
   def apply[F[_]: Applicative] = new Highlights[F] {
@@ -24,6 +24,7 @@ object Highlights {
     val whitespace = char(' ')
     val sepP       = string("==========")
     val title      = many1(notChar('\n')).map(_.toList.mkString)
+    val reference  = many1(notChar('\n')).map(_.toList.mkString)
     val lines      = many(notChar('\n')).map(_.mkString)
     val tagP       = many1(letter | digit)
 
@@ -33,7 +34,7 @@ object Highlights {
     val eol = char('\n')
 
     val contentPartParser: Parser[ContentPart] =
-      (title <~ eol <~ lines <~ eol <~ lines <~ eol, lines <~ eol).mapN(ContentPart)
+      (title <~ eol, reference <~ eol <~ lines <~ eol, lines <~ eol).mapN(ContentPart)
 
     val tagPartParser: Parser[TagPart] =
       (title <~ eol <~ lines <~ eol <~ lines <~ eol, tags <~ eol).mapN(TagPart)
@@ -42,8 +43,8 @@ object Highlights {
       (((tagPartParser <~ sepP <~ eol) ~ contentPartParser || contentPartParser) <~ sepP <~ eol)
 
     val pp = many(segmentP.map {
-      case Right(c)     => Highlight(c.title, c.content, List.empty)
-      case Left((t, c)) => Highlight(c.title, c.content, t.tags.toList)
+      case Right(c)     => Highlight(c.title, c.reference, c.content, List.empty)
+      case Left((t, c)) => Highlight(c.title, c.reference, c.content, t.tags.toList)
     })
   }
 }

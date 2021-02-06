@@ -29,7 +29,10 @@ object Program {
         s"\nFound Highlights in Notion:\n${currentHighlights.map(_.title).mkString("\n")}\n"
       )
       newHighlights = kindleHighlights.filterNot(
-        h => currentHighlights.exists(cH => cH.title == h.title && cH.content == h.content)
+        h =>
+          currentHighlights.exists(
+            cH => cH.title == h.title && (cH.content == h.newContent || cH.content == h.content)
+          )
       )
       _ <- Console.verboseLog(
         s"\nSyncing new highlights:\n${newHighlights.map(_.title).mkString("\n")}"

@@ -10,7 +10,9 @@ import scala.util.control.NonFatal
 import sttp.client.DeserializationError
 import sttp.client.HttpError
 
-case class Highlight(title: String, content: String, tags: List[String])
+case class Highlight(title: String, reference: String, content: String, tags: List[String]) {
+  def newContent: String = reference + "\n" + content
+}
 
 object Main
     extends CommandIOApp(

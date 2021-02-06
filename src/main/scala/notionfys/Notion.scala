@@ -21,7 +21,7 @@ trait Notion[F[_]] {
 
 object Notion extends Notion[AppM] {
   implicit val backend: SttpBackend[Identity, Nothing, NothingT] = HttpURLConnectionBackend()
-  private val notionUrl = "https://www.notion.so/api/v3"
+  private val notionUrl                                          = "https://www.notion.so/api/v3"
   private val noIdErr: AppM[ju.UUID] = MonadError[AppM, Throwable].raiseError(
     new RuntimeException("Did not find a notion userId in pageChunkResponse")
   )
@@ -41,7 +41,7 @@ object Notion extends Notion[AppM] {
         contentPart = List(
           addSegment(contentId, page, userId, "text"),
           addAfter(contentId, page),
-          addContent(contentId, highlight.content)
+          addContent(contentId, highlight.newContent)
         )
         separator = List(
           addSegment(separatorId, page, userId, "divider"),
@@ -88,7 +88,10 @@ object Notion extends Notion[AppM] {
         token
       )
       highlights = extractHighlights(pageChunkResponse, page)
-      userId <- pageChunkResponse.recordMap.block.get(page).flatMap(_.value.created_by_id).fold(noIdErr)(AppM.pure(_))
+      userId <- pageChunkResponse.recordMap.block
+        .get(page)
+        .flatMap(_.value.created_by_id)
+        .fold(noIdErr)(AppM.pure(_))
     } yield (highlights, userId)
 
   private def reqRes[A: Encoder, Res: Decoder](body: A, path: String, token: String) =
@@ -102,7 +105,7 @@ object Notion extends Notion[AppM] {
           .send()
       )
       resV <- IO.fromEither(res.body.left.map {
-        case HttpError(body) => HttpResponseError(res.code, body)
+        case HttpError(body)                 => HttpResponseError(res.code, body)
         case DeserializationError(body, err) => DecodingError(err.getMessage, body)
       })
     } yield resV)
@@ -116,16 +119,16 @@ object Notion extends Notion[AppM] {
         .toList
         .collect {
           case List(
-          Value(Some("sub_header"), Some(propsT), _, _),
-          Value(Some("text"), Some(propsH), _, _),
-          Value(Some("divider"), None, _, _)
-          ) =>
+              Value(Some("sub_header"), Some(propsT), _, _),
+              Value(Some("text"), Some(propsH), _, _),
+              Value(Some("divider"), None, _, _)
+              ) =>
             (propsT, propsH)
         }
       titleA <- title.title.toList.flatMap(_.headOption.toList.flatMap(_.headOption.toList))
       contentA <- content.title.toList
         .flatMap(_.headOption.toList.flatMap(_.headOption.toList))
-    } yield Highlight(titleA, contentA, List.empty)
+    } yield Highlight(titleA, "", contentA, List.empty)
 }
 
 sealed trait Arg
@@ -133,7 +136,7 @@ sealed trait Arg
 object Arg {
   implicit val encoder: Encoder[Arg] = Encoder.instance {
     case arr: ArrayArgs => arr.asJson
-    case obj: ObjArgs => obj.asJson
+    case obj: ObjArgs   => obj.asJson
   }
 }
 
@@ -144,14 +147,14 @@ object ArrayArgs {
 }
 
 case class ObjArgs(
-                    id: ju.UUID,
-                    version: Option[Int],
-                    alive: Option[String],
-                    created_by: Option[ju.UUID],
-                    parent_id: Option[ju.UUID],
-                    parent_table: Option[String],
-                    `type`: Option[String]
-                  ) extends Arg
+    id: ju.UUID,
+    version: Option[Int],
+    alive: Option[String],
+    created_by: Option[ju.UUID],
+    parent_id: Option[ju.UUID],
+    parent_table: Option[String],
+    `type`: Option[String]
+) extends Arg
 
 object ObjArgs {
   implicit val encoder: Encoder[ObjArgs] = deriveEncoder[ObjArgs].mapJson(_.dropNullValues)
@@ -190,11 +193,11 @@ object Properties {
 }
 
 case class Value(
-                  `type`: Option[String],
-                  properties: Option[Properties],
-                  content: Option[List[ju.UUID]],
-                  created_by_id: Option[UUID]
-                )
+    `type`: Option[String],
+    properties: Option[Properties],
+    content: Option[List[ju.UUID]],
+    created_by_id: Option[UUID]
+)
 
 object Value {
   implicit val decoder: Decoder[Value] = deriveDecoder
@@ -232,12 +235,12 @@ object Cursor {
 }
 
 case class PageChunkRequest(
-                             pageId: ju.UUID,
-                             limit: Int,
-                             cursor: Cursor,
-                             chunkNumber: Int,
-                             verticalColumns: Boolean
-                           )
+    pageId: ju.UUID,
+    limit: Int,
+    cursor: Cursor,
+    chunkNumber: Int,
+    verticalColumns: Boolean
+)
 
 object PageChunkRequest {
   implicit val encoder: Encoder[PageChunkRequest] = deriveEncoder
