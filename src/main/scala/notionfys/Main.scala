@@ -18,7 +18,7 @@ object Main
     extends CommandIOApp(
       name = "notionfy",
       header = "Sync your Kindle highlights to Notion",
-      version = "0.3.0"
+      version = "0.3.1"
     ) {
 
   implicit val F: FS[AppM]         = FS
