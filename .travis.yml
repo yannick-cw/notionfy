@@ -12,7 +12,7 @@ jobs:
     - os: osx
     - os: windows
       language: shell
-      env: NATIVE_IMAGE_PATH="C:/Program Files/GraalVM/graalvm-ce-java11-21.0.0/bin/native-image.cmd"
+      env: NATIVE_IMAGE_PATH="C:/Program Files/GraalVM/graalvm-ce-java11-21.0.0.2/bin/native-image.cmd"
 
 
 before_install:
