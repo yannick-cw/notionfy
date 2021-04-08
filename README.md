@@ -75,3 +75,5 @@ notionfy -n "notion_token" -p "parent_page_id" -k "kindle_path"
   - adjusting to notion api change
 - `0.3.0`
   - Now adds the reference of where the highlight is as first line to the content in Notion
+- `0.3.1`
+  - Api Limit changed to 100 for Notion, currently only a limited (< 100) number of highlights is supported until pagination is added
