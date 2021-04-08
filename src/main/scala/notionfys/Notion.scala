@@ -248,7 +248,7 @@ object PageChunkRequest {
   def apply(pageId: ju.UUID): PageChunkRequest =
     PageChunkRequest(
       pageId = pageId,
-      limit = 10000,
+      limit = 100,
       cursor = Cursor(stack = List(List(Stack(table = "block", id = pageId, index = 0)))),
       chunkNumber = 0,
       verticalColumns = false
